@@ -1,5 +1,7 @@
 const ROLE_KEY = 'finance-dashboard-role'
 const TRANSACTIONS_KEY = 'finance-dashboard-transactions'
+const TRANSACTIONS_VERSION_KEY = 'finance-dashboard-transactions-version'
+const TRANSACTIONS_VERSION = '2026-04-realistic-demo-v1'
 
 export function loadStoredRole(defaultRole) {
   if (typeof window === 'undefined') {
@@ -22,9 +24,10 @@ export function loadStoredTransactions(defaultTransactions) {
     return defaultTransactions
   }
 
+  const storedVersion = window.localStorage.getItem(TRANSACTIONS_VERSION_KEY)
   const storedTransactions = window.localStorage.getItem(TRANSACTIONS_KEY)
 
-  if (!storedTransactions) {
+  if (!storedTransactions || storedVersion !== TRANSACTIONS_VERSION) {
     return defaultTransactions
   }
 
@@ -41,4 +44,5 @@ export function saveStoredTransactions(transactions) {
   }
 
   window.localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(transactions))
+  window.localStorage.setItem(TRANSACTIONS_VERSION_KEY, TRANSACTIONS_VERSION)
 }

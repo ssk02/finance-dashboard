@@ -3,12 +3,12 @@ import DashboardShell from '../layout/DashboardShell'
 import ChartsSection from './ChartsSection'
 import InsightsPanel from './InsightsPanel'
 import TransactionsTable from './TransactionsTable'
+import Toast from '../ui/Toast'
 import {
   holdings,
-  summaryCards,
   transactionRows,
 } from '../../data/dashboardData'
-import { getRecentTransactions } from '../../lib/finance'
+import { formatCurrency, getRecentTransactions, getTransactionSummary, parseAmount } from '../../lib/finance'
 import {
   loadStoredRole,
   loadStoredTransactions,
@@ -24,7 +24,13 @@ const toneClasses = {
 
 function FinanceDashboard() {
   const [role, setRole] = useState(() => loadStoredRole('viewer'))
-  const [transactions] = useState(() => loadStoredTransactions(transactionRows))
+  const [transactions, setTransactions] = useState(() => loadStoredTransactions(transactionRows))
+  const [toast, setToast] = useState(null)
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3300)
+  }
 
   useEffect(() => {
     saveStoredRole(role)
@@ -38,6 +44,40 @@ function FinanceDashboard() {
     () => getRecentTransactions(transactions),
     [transactions],
   )
+
+  const transactionSummary = useMemo(
+    () => getTransactionSummary(transactions),
+    [transactions],
+  )
+
+  const holdingsValue = holdings.reduce((sum, holding) => sum + holding.value, 0)
+
+  const summaryCards = [
+    {
+      title: 'Total income',
+      value: transactionSummary.totalIncome,
+      change: 'Since Jan 2026',
+      tone: 'positive',
+    },
+    {
+      title: 'Total expenses',
+      value: transactionSummary.totalExpenses,
+      change: 'Since Jan 2026',
+      tone: 'negative',
+    },
+    {
+      title: 'Net savings',
+      value: transactionSummary.totalSavings,
+      change: transactionSummary.totalSavings >= 0 ? 'Positive' : 'Negative',
+      tone: transactionSummary.totalSavings >= 0 ? 'positive' : 'negative',
+    },
+    {
+      title: 'Investments',
+      value: holdingsValue,
+      change: '+4.4%',
+      tone: 'positive',
+    },
+  ]
 
   return (
     <DashboardShell>
@@ -108,12 +148,14 @@ function FinanceDashboard() {
                 <p className="text-sm text-slate-400">{card.title}</p>
                 <div className="mt-4 flex items-end justify-between gap-3">
                   <p className="text-2xl font-semibold text-white">
-                    {card.value}
+                    {formatCurrency(card.value)}
                   </p>
                   <span
                     className={`rounded-full px-2.5 py-1 text-xs font-medium ${toneClasses[card.tone]}`}
                   >
-                    {card.change}
+                    {card.changeValue
+                      ? `${formatCurrency(card.changeValue)} ${card.changeLabel}`
+                      : card.change}
                   </span>
                 </div>
               </article>
@@ -159,7 +201,7 @@ function FinanceDashboard() {
                         Value
                       </p>
                       <p className="mt-1 text-sm text-slate-200">
-                        {holding.value}
+                        {formatCurrency(holding.value)}
                       </p>
                     </div>
                     <div>
@@ -187,7 +229,7 @@ function FinanceDashboard() {
                 <div className="mt-6 space-y-4">
                   {recentTransactions.map((transaction) => (
                     <div
-                      key={`${transaction.title}-${transaction.date}`}
+                      key={transaction.id}
                       className="rounded-2xl border border-white/10 bg-white/5 p-4 transition duration-200 hover:border-cyan-300/20 hover:bg-white/[0.07]"
                     >
                       <div className="flex items-start justify-between gap-4">
@@ -207,7 +249,8 @@ function FinanceDashboard() {
                                 : 'text-rose-300'
                             }`}
                           >
-                            {transaction.amount}
+                            {transaction.type === 'income' ? '+' : '-'}
+                            {formatCurrency(Math.abs(parseAmount(transaction.amount)))}
                           </p>
                           <p className="mt-1 text-sm text-slate-400">
                             {transaction.date}
@@ -229,9 +272,16 @@ function FinanceDashboard() {
 
           <ChartsSection transactions={transactions} />
 
-          <TransactionsTable role={role} transactions={transactions} />
+          <TransactionsTable role={role} transactions={transactions} onAddTransaction={setTransactions} showToast={showToast} />
         </div>
       </div>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </DashboardShell>
   )
 }
