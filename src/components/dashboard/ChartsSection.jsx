@@ -12,6 +12,7 @@ import {
   YAxis,
 } from 'recharts'
 import {
+  formatChartAxisCurrency,
   formatCurrency,
   getCashFlowChartData,
   getExpensesByCategory,
@@ -70,7 +71,7 @@ function ChartsSection({ transactions }) {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={transactionsByDate}
-                margin={{ top: 8, right: 12, left: -18, bottom: 0 }}
+                margin={{ top: 8, right: 12, left: 6, bottom: 0 }}
               >
                 <CartesianGrid stroke="rgba(148, 163, 184, 0.14)" />
                 <XAxis
@@ -80,11 +81,12 @@ function ChartsSection({ transactions }) {
                   axisLine={false}
                 />
                 <YAxis
-                  tickFormatter={formatCurrency}
+                  tickFormatter={formatChartAxisCurrency}
                   tick={{ fill: '#94a3b8', fontSize: 12 }}
                   tickLine={false}
                   axisLine={false}
-                  width={56}
+                  tickMargin={10}
+                  width={72}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend

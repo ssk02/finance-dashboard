@@ -1,4 +1,8 @@
-import { formatInrCurrency, parseCurrencyAmount } from './currency'
+import {
+  formatCompactInrCurrency,
+  formatInrCurrency,
+  parseCurrencyAmount,
+} from './currency'
 
 export function parseAmount(amount) {
   return parseCurrencyAmount(amount)
@@ -6,6 +10,10 @@ export function parseAmount(amount) {
 
 export function formatCurrency(value) {
   return formatInrCurrency(value)
+}
+
+export function formatChartAxisCurrency(value) {
+  return formatCompactInrCurrency(value)
 }
 
 export function filterTransactions(transactions, searchQuery, selectedType, dateFrom, dateTo) {
